@@ -1,0 +1,147 @@
+apiVersion: operator.tekton.dev/v1alpha1
+kind: TektonConfig
+metadata:
+  name: config
+spec:
+  addon: {}
+  chain:
+    disabled: true
+    options:
+      disabled: false
+  config: {}
+  dashboard:
+    options:
+      disabled: false
+    readonly: false
+  hub:
+    options:
+      disabled: false
+  pipeline:
+    disable-affinity-assistant: true
+    # coschedule: workspaces
+    await-sidecar-readiness: true
+    disable-creds-init: false
+    enable-api-fields: alpha
+    enable-bundles-resolver: true
+    enable-cluster-resolver: true
+    enable-custom-tasks: true
+    enable-git-resolver: true
+    enable-hub-resolver: true
+    enable-provenance-in-status: true
+    enable-tekton-oci-bundles: false
+    metrics.pipelinerun.duration-type: histogram
+    metrics.pipelinerun.level: pipeline
+    metrics.taskrun.duration-type: histogram
+    metrics.taskrun.level: task
+    options:
+      deployments:
+        tekton-events-controller:
+          metadata:
+            creationTimestamp: null
+          spec:
+            selector: null
+            strategy: {}
+            template:
+              metadata:
+                creationTimestamp: null
+              spec:
+                containers:
+                - env:
+                  - name: KUBERNETES_MIN_VERSION
+                    value: 1.24.0
+                  name: tekton-events-controller
+                  resources: {}
+          status: {}
+        tekton-operator-proxy-webhook:
+          metadata:
+            creationTimestamp: null
+          spec:
+            selector: null
+            strategy: {}
+            template:
+              metadata:
+                creationTimestamp: null
+              spec:
+                containers:
+                - env:
+                  - name: KUBERNETES_MIN_VERSION
+                    value: 1.24.0
+                  name: proxy
+                  resources: {}
+          status: {}
+        tekton-pipelines-controller:
+          metadata:
+            creationTimestamp: null
+          spec:
+            selector: null
+            strategy: {}
+            template:
+              metadata:
+                creationTimestamp: null
+              spec:
+                containers:
+                - env:
+                  - name: KUBERNETES_MIN_VERSION
+                    value: 1.24.0
+                  name: tekton-pipelines-controller
+                  resources: {}
+          status: {}
+        tekton-pipelines-remote-resolvers:
+          metadata:
+            creationTimestamp: null
+          spec:
+            selector: null
+            strategy: {}
+            template:
+              metadata:
+                creationTimestamp: null
+              spec:
+                containers:
+                - env:
+                  - name: KUBERNETES_MIN_VERSION
+                    value: 1.24.0
+                  name: controller
+                  resources: {}
+          status: {}
+        tekton-pipelines-webhook:
+          metadata:
+            creationTimestamp: null
+          spec:
+            selector: null
+            strategy: {}
+            template:
+              metadata:
+                creationTimestamp: null
+              spec:
+                containers:
+                - env:
+                  - name: KUBERNETES_MIN_VERSION
+                    value: 1.24.0
+                  name: webhook
+                  resources: {}
+          status: {}
+      disabled: false
+    performance:
+      disable-ha: false
+    require-git-ssh-secret-known-hosts: false
+    running-in-environment-with-injected-sidecars: true
+    send-cloudevents-for-runs: false
+    trusted-resources-verification-no-match-policy: ignore
+  platforms:
+    openshift: {}
+  profile: all
+  pruner:
+    disabled: false
+    keep: 50
+    prune-per-resource: true
+    resources:
+    - pipelinerun
+    - taskrun
+    schedule: 0 8 * * *
+  targetNamespace: tekton-pipelines
+  trigger:
+    enable-api-fields: stable
+    options:
+      disabled: false
+
+

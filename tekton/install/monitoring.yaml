@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tekton
+  namespace: tekton-pipelines
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 30s
+    path: /metrics
+    port: http-metrics
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - tekton-pipelines
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: default
+      app.kubernetes.io/name: controller
