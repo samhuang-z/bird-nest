@@ -1,0 +1,132 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: image-metadata
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will generate an image tag.
+  params:
+  - name: milvus_repo_owner
+    type: string
+    default: "milvus-io"
+  - name: registryToPush
+    type: string
+    description: the registry to push
+    default: harbor.milvus.io
+  - name: branch
+    type: string
+    description: the branch name of the source code.
+    default: "master"
+  - name: hash
+    type: string
+    description: the hash code of the current commit.
+  - name: arch
+    type: string
+    description: the architectures of the image, it would be amd64 or arm64
+    default: "amd64"
+  - name: computing_engine
+    type: string
+    default: "cpu"
+  - name: suppress_suffix_of_image_tag
+    type: string
+    description: append arm64 or amd64 based on arch param to the end of image tag if set false
+    default: false
+  - name: runtime_image
+    type: string
+    default: alpine:latest
+    description: the image of this task
+  - name: build_type
+    description: whether to enable debug mode when compile
+    type: string
+    default: 'release'
+  results:
+    - name: image
+      description: the generated full qualified image name
+    - name: name
+      description: the generated image name
+    - name: tag 
+      description: the generated image tag
+    - name: hash
+      description: the shorten hash code of the current commit.
+    - name: timestamp
+      description: The current timestamp
+  steps:
+  - name: "generate-image-name"
+    image: $(params.runtime_image)
+    script: |
+      #!/usr/bin/env sh
+
+      # Variable definition
+      registryToPush=$(params.registryToPush)
+
+      name=""
+
+      # Assign your variable value here for testing purposes
+      # registryToPush="harbor.milvus.io"
+
+      # Check the value of registryToPush and output the appropriate string
+      if [ "$registryToPush" = "harbor.milvus.io" ]; then
+        name="harbor.milvus.io/milvusdb/milvus"
+      elif [ "$registryToPush" = "docker.io" ]; then
+        name="milvusdb/milvus"
+      else
+        echo "invalid registry"
+        exit 1
+      fi
+
+      echo -n "${name}" >  $(results.name.path)
+
+      echo "image name: ${name}"
+
+  - name: "generate-tag"
+    image: $(params.runtime_image)
+    script: |
+      #!/usr/bin/env sh
+      current=$(date +%Y%m%d)
+      hash=$(echo $(params.hash) | cut -c1-8 )
+      tag="$(params.branch)-${current}-${hash}"
+
+      arch=$(params.arch)
+
+      # if it is building gpu image, append
+      # gpu into tag
+      if [ "$(params.computing_engine)" = "gpu" ]; then
+        tag="${tag}-gpu"
+      fi
+
+
+      if [ "$(params.build_type)" = "debug" ]; then
+          tag="debug-${tag}"
+      fi
+
+      if [ "$(params.suppress_suffix_of_image_tag)" = "false" ]; then
+        if [ -n "$arch" ]; then
+          tag="${tag}-${arch}"
+        fi
+      fi
+
+      # add milvus repo owner if the owner is not milvus-io org
+      if [ "$(params.milvus_repo_owner)" != "milvus-io" ]; then
+        tag="$(params.milvus_repo_owner)-${tag}" 
+      fi
+
+      echo "tag: ${tag}"
+
+      echo -n "${current}" > $(results.timestamp.path)
+      echo -n "${hash}" > $(results.hash.path)
+      echo -n "${tag}" >  $(results.tag.path)
+
+  - name: "generate-image"
+    image: $(params.runtime_image)
+    script: |
+      #!/usr/bin/env sh
+      name=$(cat $(results.name.path) )
+      tag=$(cat $(results.tag.path))
+
+      echo -n "${name}:${tag}" >  $(results.image.path)
+
+
+
+

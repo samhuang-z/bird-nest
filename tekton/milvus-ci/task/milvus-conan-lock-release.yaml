@@ -1,0 +1,56 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: release-lock
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will release conan lock
+  params:
+  - name: runtime_image
+    type: string
+    default: harbor.milvus.io/milvusdb/conan:1.62.0
+    description: the image of this task
+  - name: conan-cache-name
+    type: string
+    default: "cache-conan-ubuntu2204-gcc12-release"
+  workspaces:
+  - name: source
+  steps:
+  - name: "generate-tag"
+    image: $(params.runtime_image)
+    workingDir: $(workspaces.source.path)
+    script: |
+      #!/usr/bin/env sh
+      conan remove --locks
+
+    volumeMounts:
+      - mountPath: /root/.conan
+        name: $(params.conan-cache-name)
+  volumes:
+  - hostPath:
+      # conan cache for ubuntu20.04 os, gcc9 compiler and build type is release
+      path: /root/cache/conan/ubuntu20.04/gcc9/release/.conan
+      type: DirectoryOrCreate
+    name: cache-conan-ubuntu2004-gcc9-release
+  - hostPath:
+      # conan cache for ubuntu20.04 os, gcc9 compiler and build type is debug
+      path: /root/cache/conan/ubuntu20.04/gcc9/debug/.conan
+      type: DirectoryOrCreate
+    name: cache-conan-ubuntu2004-gcc9-debug
+  - hostPath:
+      # conan cache for ubuntu22.04 os, gcc12 compiler and build type is release
+      path: /root/cache/conan/ubuntu22.04/gcc12/release/.conan
+      type: DirectoryOrCreate
+    name: cache-conan-ubuntu2204-gcc12-release
+  - hostPath:
+      # conan cache for ubuntu22.04 os, gcc12 compiler and build type is debug 
+      path: /root/cache/conan/ubuntu22.04/gcc12/debug/.conan
+      type: DirectoryOrCreate
+    name: cache-conan-ubuntu2204-gcc12-debug
+  - hostPath:
+      # conan cache for ubuntu20.04 os, gcc9 compiler and build type is release
+      path: /root/cache/go/go1.21/mod
+      type: DirectoryOrCreate
+    name: go1-21-cache

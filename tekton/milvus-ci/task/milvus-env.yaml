@@ -1,0 +1,92 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: milvus-env
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will choose which tags will be used for milvus-env
+  params:
+  - name: os_name
+    type: string
+    default: ""
+  - name: version
+    type: string
+    default: ""
+  - name: computing_engine
+    type: string
+    default: "cpu"
+  - name: runtime_image
+    type: string
+    default: alpine:latest
+    description: the image of this task
+  - name: registryToPush
+    type: string
+    description: the registry to push
+    default: harbor.milvus.io
+  workspaces:
+  - name: source
+  results:
+    - name: os_name
+      description: the os_name part of milvus-env tag to use
+    - name: tag
+      description: the image tag of milvus-env to use
+    - name: src_image
+      description: the source of milvus-env
+    - name: image
+      description: the full qualified image of milvus-env
+  steps:
+  - name: "generate-tag"
+    image: $(params.runtime_image)
+    workingDir: $(workspaces.source.path)
+    script: |
+      #!/usr/bin/env sh
+      set -a  # automatically export all variables from .env
+      . .env
+      if [ $? -ne 0 ]; then
+        echo "error: .env not found at root path"
+        exit 1
+      fi
+      set +a  # stop automatically
+
+      os_name="$(params.os_name)"
+      version="$(params.version)"
+
+      # if input is empty, use OS_NAME from .env file
+      # otherwise use input
+      if [ -z "${os_name}" ]; then
+        os_name="${OS_NAME}"
+      fi
+
+
+      # if input is empty, use value from .env file
+      # otherwise use input
+      if [ -z "${version}" ]; then
+        if [ "$(params.computing_engine)" = "cpu" ]; then
+
+          # use the value LATEST_DATE_VERSION from .env file 
+          # if it is cpu computing_engine
+          version="${LATEST_DATE_VERSION}"
+        elif [ "$(params.computing_engine)" = "gpu" ]; then
+
+          # use the value LATEST_GPU_DATE_VERSION from .env file 
+          # if it is gpu computing_engine
+          version="${LATEST_GPU_DATE_VERSION}"
+        fi
+      fi
+
+
+      # generate the result based on computing_engine
+      if [ "$(params.computing_engine)" = "cpu" ]; then
+        result="${os_name}-${version}" 
+      elif [ "$(params.computing_engine)" = "gpu" ]; then
+        result="gpu-${os_name}-${version}" 
+      fi
+
+      echo "milvus-env tag: ${result}"
+      echo -n "${result}" > $(results.tag.path)
+      echo -n "${os_name}" > $(results.os_name.path)
+      echo -n "milvusdb/milvus-env:${result}" > $(results.src_image.path)
+      echo -n "$(params.registryToPush)/milvusdb/milvus-env:${result}" > $(results.image.path)
+

@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- milvus-env.yaml
+- milvus-docker-check-image.yaml
+- milvus-docker-export-image.yaml
+- milvus-docker-push-image.yaml
+- milvus-docker-make.yaml
+- milvus-choose-dockerfile.yaml
+- milvus-choose-cache.yaml
+- milvus-image-metadata.yaml
+- milvus-build-image.yaml
+- milvus-docker-sync-image.yaml
+- milvus-conan-lock-release.yaml

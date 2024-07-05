@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: choose-dockerfile
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will generate an image tag.
+  params:
+  - name: os_name
+    type: string
+    description: the os of the base image to use at final image build
+  - name: computing_engine
+    type: string
+    default: "cpu"
+  - name: runtime_image
+    type: string
+    default: alpine:latest
+    description: the image of this task
+  results:
+    - name: dockerfile
+      description: the path of dockerfile to use
+  steps:
+  - name: "generate-tag"
+    image: $(params.runtime_image)
+    script: |
+      #!/usr/bin/env sh
+
+      if [ "$(params.computing_engine)" = "gpu" ]; then
+
+        echo -n "./build/docker/milvus/gpu/$(params.os_name)/Dockerfile" | tee $(results.dockerfile.path)
+
+        exit 0;
+      fi
+
+      # otherwise the computing_engine is cpu, so use dockerfile for cpu type
+      echo -n "./build/docker/milvus/$(params.os_name)/Dockerfile" | tee $(results.dockerfile.path)
