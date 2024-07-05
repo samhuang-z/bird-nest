@@ -41,7 +41,7 @@ spec:
   - name: suppress_suffix_of_image_tag
     type: string
     description: whether to suppress suffix of image tag
-    default: 'false'
+    default: false
   - name: build_type
     type: string
     description: whether to enable debug mode when compile
@@ -57,10 +57,14 @@ spec:
   workspaces:
   - name: shared-data
   results:
-  - name: image
+  - name: image-fqdn
     type: string
     description: the fully qualified image name
     value: "$(tasks.milvus-image-metadata.results.image)"
+  - name: image-tag
+    type: string
+    description: the tag of the image to build
+    value: "$(tasks.milvus-image-metadata.results.tag)"
   finally:
   - name: finally-release-conan-lock
     workspaces:
@@ -118,6 +122,8 @@ spec:
       value: $(params.milvus_env_version)
     - name: computing_engine
       value: $(params.computing_engine)
+    - name: registryToPush
+      value: $(params.registryToPush)
   - name: sync-env-image
     runAfter: ["milvus-env"]
     taskRef:

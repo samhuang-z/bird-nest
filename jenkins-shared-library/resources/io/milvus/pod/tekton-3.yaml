@@ -1,0 +1,15 @@
+spec:
+  securityContext:
+    runAsUser: 1000 # default UID of jenkins user in agent image
+  containers:
+  - name: kubectl
+    image: bitnami/kubectl:1.27.14
+    command:
+    - cat
+    tty: true
+  - name: tkn
+    image: milvusdb/krte:tkn-0.37.0
+    command:
+    - cat
+    tty: true
+

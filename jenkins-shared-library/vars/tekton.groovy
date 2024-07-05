@@ -1,6 +1,5 @@
 
-def run_tekton_pipeline(Map args) {
-
+def run(Map args) {
     def getGcc = { revision, gcc ->
         if (revision.startsWith('v2.3') || revision.startsWith('2.3')) {
             'gcc9'
@@ -8,7 +7,6 @@ def run_tekton_pipeline(Map args) {
             gcc ?: 'gcc12'
         }
     }
-   
 
     def getOSName = { revision, osName ->
         if (revision.startsWith('v2.3') || revision.startsWith('2.3')) {
@@ -18,10 +16,24 @@ def run_tekton_pipeline(Map args) {
         }
     }
 
+    def compute_resources_limits_for_build = '''
+    - pipelineTaskName: make-milvus
+      computeResources:
+        requests:
+          cpu: 4
+          memory: 30Gi
+        limits:
+          cpu: 4
+          memory: 32Gi
+'''
+
     def part_of_arm_template = '''
   taskRunTemplate:
     podTemplate:
       tolerations:
+      - key: node-role.kubernetes.io/knowhere
+        operator: "Exists"
+        effect: NoSchedule
       - key: "node-role.kubernetes.io/arm"
         operator: "Exists"
         effect: "NoSchedule"
@@ -37,19 +49,26 @@ metadata:
   generateName: milvus-build-
   namespace: milvus-ci
 spec:
+  timeouts:
+    pipeline: "1h30m"
   pipelineRef:
     name: milvus-clone-build-push
   taskRunSpecs:
+    - pipelineTaskName: fetch-source
+      podTemplate:
+        securityContext:
+          fsGroup: 65532 
     - pipelineTaskName: push-image
       serviceAccountName: robot-tekton
     - pipelineTaskName: sync-env-image
       serviceAccountName: robot-tekton
+${ args.arch == 'arm64' && args.datacenter == 'IDC' ? compute_resources_limits_for_build : '' }
 ${ args.arch == 'arm64' ? part_of_arm_template : '' }
   workspaces:
   - name: shared-data
     volumeClaimTemplate:
       spec:
-        storageClassName: local-path
+        storageClassName: ${ args.storage_class ?: 'local-path' }
         accessModes:
         - ReadWriteOnce
         resources:
@@ -78,7 +97,10 @@ ${ args.arch == 'arm64' ? part_of_arm_template : '' }
     value: ${args.milvus_env_version ?: ''}
   - name: gcc
     value: ${getGcc(args.revision, args.gcc)}
-
+  - name: registryToPush
+    value: ${args.registryToPush ?: 'harbor.milvus.io'}
+  - name: additional-make-params
+    value: ${args.additional_make_params ?: 'use_disk_index=ON'}
 EOF
 """
 
@@ -96,8 +118,8 @@ def print_log(name) {
   """
 }
 
-// return [true,""] if there is no failures
-// return [false, error message] if there is a failure
+// return image if there is no failures
+// throw exception if there is a failure
 def check_result(name) {
     def ret = sh( label: 'tekton pipelinerun describe', script: "tkn pipelinerun describe ${name} -n milvus-ci -o yaml", returnStdout: true)
 
@@ -108,16 +130,28 @@ def check_result(name) {
     def failures = read.status.conditions.findAll { it.type == 'Succeeded' && it.status == 'False' }
 
     if (failures.size() > 0) {
-        return [false, failures[0].message]
+        throw new Exception(failures[0].message)
     }
 
-    def results = read.status.results.findAll { it.name == 'image' }
+    // get first element if any result found
+    def query = { list, closure  ->
 
-    if (results.size() == 0) {
-        return [true, 'No image result found']
+        def items = list.findAll(closure)
+
+        if (items) {
+            items[0].value
+        }
     }
 
-    def image = results[0].value
+    def image = new Image()
+    image.fqdn = query(read.status.results) { it.name == 'image-fqdn' }
+    image.tag = query(read.status.results) { it.name == 'image-tag' }
 
-    return [ true, image]
+    return image
+}
+
+
+class Image {
+    String fqdn
+    String tag
 }
