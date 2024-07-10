@@ -23,8 +23,8 @@ def run(Map args) {
           cpu: 4
           memory: 30Gi
         limits:
-          cpu: 4
-          memory: 32Gi
+          cpu: 6
+          memory: 48Gi
 '''
 
     def part_of_arm_template = '''
