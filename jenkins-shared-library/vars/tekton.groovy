@@ -16,17 +16,6 @@ def run(Map args) {
         }
     }
 
-    def compute_resources_limits_for_build = '''
-    - pipelineTaskName: make-milvus
-      computeResources:
-        requests:
-          cpu: 4
-          memory: 30Gi
-        limits:
-          cpu: 6
-          memory: 48Gi
-'''
-
     def part_of_arm_template = '''
   taskRunTemplate:
     podTemplate:
@@ -62,7 +51,6 @@ spec:
       serviceAccountName: robot-tekton
     - pipelineTaskName: sync-env-image
       serviceAccountName: robot-tekton
-${ args.arch == 'arm64' && args.datacenter == 'IDC' ? compute_resources_limits_for_build : '' }
 ${ args.arch == 'arm64' ? part_of_arm_template : '' }
   workspaces:
   - name: shared-data

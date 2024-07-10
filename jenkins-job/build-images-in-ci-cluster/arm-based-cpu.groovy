@@ -24,7 +24,6 @@ pipeline {
                             job_name = tekton.run  revision: "$env.BRANCH_NAME", 
                                                    arch:'arm64', 
                                                    datacenter: 'IDC',
-                                                   additional_make_params : '-j6 use_disk_index=ON'
 
                         }
                     }
