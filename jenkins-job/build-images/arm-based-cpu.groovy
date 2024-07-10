@@ -34,10 +34,8 @@ pipeline {
                         } catch (Exception e) {
                             println e
                         }
-                         (ok, ret) = tekton.check_result(job_name)
-                         if (!ok) {
-                             error(ret)
-                         }
+
+                        output.image = tekton.check_result(job_name)
 
                     }
                 }
@@ -48,10 +46,7 @@ pipeline {
             steps {
                 container('jnpl') {
                     script {
-                        output.image = ret
-
-                        writeJSON(file: 'output.json', json: output)
-                        archiveArtifacts artifacts: 'output.json', onlyIfSuccessful: true
+                        tekton.archive(output)
                     }
                 }
             }

@@ -18,7 +18,6 @@ pipeline {
         stage('build') {
             steps {
                 lock('arm-compute-resource') {
-
                     container('kubectl') {
                         script {
                             job_name = tekton.run revision: "$env.BRANCH_NAME",
@@ -31,15 +30,14 @@ pipeline {
                     container('tkn') {
                         script {
                             try {
-                               tekton.print_log(job_name)
+                                tekton.print_log(job_name)
                             } catch (Exception e) {
                                 println e
                             }
 
-                            image = tekton.check_result(job_name)
+                            output.image = tekton.check_result(job_name)
                         }
                     }
-
                 }
             }
         }
@@ -48,18 +46,11 @@ pipeline {
             steps {
                 container('jnpl') {
                     script {
-                        output.image = image
 
-                        writeJSON(file: 'output.json', json: output)
-                        archiveArtifacts artifacts: 'output.json', onlyIfSuccessful: true
+                        tekton.archive(output)
                     }
                 }
             }
         }
     }
 }
-
-
-
-
-

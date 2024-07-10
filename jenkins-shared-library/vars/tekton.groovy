@@ -143,3 +143,8 @@ class Image {
     String fqdn
     String tag
 }
+
+def archive(output){
+    writeJSON(file: 'output.json', json: output)
+    archiveArtifacts artifacts: 'output.json', onlyIfSuccessful: true
+}

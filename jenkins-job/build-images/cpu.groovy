@@ -34,7 +34,7 @@ pipeline {
                             println e
                         }
 
-                        image = tekton.check_result(job_name)
+                        output.image = tekton.check_result(job_name)
 
                     }
                 }
@@ -45,10 +45,8 @@ pipeline {
             steps {
                 container('jnpl') {
                     script {
-                        output.image = image
 
-                        writeJSON(file: 'output.json', json: output)
-                        archiveArtifacts artifacts: 'output.json', onlyIfSuccessful: true
+                        tekton.archive(output)
                     }
                 }
             }
