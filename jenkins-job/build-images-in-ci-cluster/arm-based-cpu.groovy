@@ -17,28 +17,32 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                container('kubectl') {
-                    script {
-                        job_name = tekton.run  revision: "$env.BRANCH_NAME", 
-                                               arch:'arm64', 
-                                               datacenter: 'IDC',
-                                               additional_make_params : '-j6 use_disk_index=ON'
+                lock('arm-compute-resource') {
 
-                    }
-                }
+                    container('kubectl') {
+                        script {
+                            job_name = tekton.run  revision: "$env.BRANCH_NAME", 
+                                                   arch:'arm64', 
+                                                   datacenter: 'IDC',
+                                                   additional_make_params : '-j6 use_disk_index=ON'
 
-                container('tkn') {
-                    script {
-
-                        try {
-                           tekton.print_log(job_name)
-                        } catch (Exception e) {
-                            println e
                         }
-
-                        image = tekton.check_result(job_name)
-
                     }
+
+                    container('tkn') {
+                        script {
+
+                            try {
+                               tekton.print_log(job_name)
+                            } catch (Exception e) {
+                                println e
+                            }
+
+                            image = tekton.check_result(job_name)
+
+                        }
+                    }
+
                 }
             }
         }
