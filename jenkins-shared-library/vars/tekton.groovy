@@ -16,6 +16,9 @@ def run(Map args) {
         }
     }
 
+
+
+
     def part_of_arm_template = '''
   taskRunTemplate:
     podTemplate:
@@ -41,7 +44,7 @@ spec:
   timeouts:
     pipeline: "1h30m"
   pipelineRef:
-    name: milvus-clone-build-push
+    name: ${choose_pipeline(args)}
   taskRunSpecs:
     - pipelineTaskName: fetch-source
       podTemplate:
@@ -63,8 +66,7 @@ ${ args.arch == 'arm64' ? part_of_arm_template : '' }
           requests:
             storage: 100Gi
   params:
-  - name: revision
-    value: ${args.revision}
+${ part_of_code_fetch(args) }
   - name: arch
     value: ${args.arch}
   - name: computing_engine
@@ -147,4 +149,29 @@ class Image {
 def archive(output){
     writeJSON(file: 'output.json', json: output)
     archiveArtifacts artifacts: 'output.json', onlyIfSuccessful: true
+}
+
+def part_of_code_fetch(Map args) {
+  if (args.isPr) {
+"""
+  - name: pullRequestBaseRef
+    value: ${args.pullRequestBaseRef}
+  - name: pullRequestNumber
+    value: ${args.pullRequestNumber}
+"""
+  } else {
+"""
+  - name: revision
+    value: ${args.revision}
+"""
+  }
+}
+
+
+def choose_pipeline (Map args ) {
+    if (args.isPr) {
+        'milvus-build-for-pull-request'
+    } else {
+        'milvus-clone-build-push'
+  }
 }
