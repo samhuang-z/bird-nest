@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
 - clone-build-push.yaml
+- milvus-build-for-pull-request.yaml
