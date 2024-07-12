@@ -52,6 +52,17 @@ spec:
   steps:
   - name: make
     image: $(params.milvus-env)
+    env:
+    - name: CCACHE_COMPILERCHECK
+      value: "content"
+    - name: CCACHE_COMPRESS
+      value: '1'
+    - name: CCACHE_COMPRESSLEVEL
+      value: '5'
+    - name: CCACHE_MAXSIZE
+      value: "2G"
+    - name: CCACHE_DIR
+      value: "/ccache" 
     workingDir: $(workspaces.source.path)
     script: |
       #!/usr/bin/env sh
@@ -74,6 +85,8 @@ spec:
         name: $(params.conan-cache-name)
       - mountPath: /go/pkg/mod
         name: $(params.go-cache-name)
+      - mountPath: /ccache
+        name: ccache
   volumes:
   - hostPath:
       # conan cache for ubuntu20.04 os, gcc9 compiler and build type is release
@@ -100,3 +113,7 @@ spec:
       path: /root/cache/go/go1.21/mod
       type: DirectoryOrCreate
     name: go1-21-cache
+  - hostPath:
+      path: /root/cache/ccache
+      type: DirectoryOrCreate
+    name: ccache
