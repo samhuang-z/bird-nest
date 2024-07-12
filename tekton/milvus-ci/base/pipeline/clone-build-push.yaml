@@ -128,9 +128,6 @@ spec:
     runAfter: ["milvus-env"]
     taskRef:
       name: sync-env-image
-    workspaces:
-    - name: source
-      workspace: shared-data
     params:
     - name: src 
       value: $(tasks.milvus-env.results.src_image)
