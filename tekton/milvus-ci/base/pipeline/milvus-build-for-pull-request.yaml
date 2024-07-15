@@ -138,9 +138,6 @@ spec:
     runAfter: ["milvus-env"]
     taskRef:
       name: sync-env-image
-    workspaces:
-    - name: source
-      workspace: shared-data
     params:
     - name: src 
       value: $(tasks.milvus-env.results.src_image)
@@ -194,34 +191,18 @@ spec:
       value: $(params.build_type)
     - name: additional-make-params 
       value: $(params.additional-make-params)
-  - name: build-image
+  - name: image-build-push
     runAfter: ["make-milvus"]
     taskRef:
-      name: build-image
+      name: image-build-push
     workspaces:
     - name: source
       workspace: shared-data
     params:
-    - name: milvus-env
-      value: "$(tasks.milvus-env.results.image)"
     - name: image_name
       value: "$(tasks.milvus-image-metadata.results.image)"
-    - name: dockerfile
-      value: "$(tasks.choose-dockerfile.results.dockerfile)"
+    - name: dockerfile_location
+      value: "$(tasks.choose-dockerfile.results.dockerfile_location)"
+    - name: arch
+      value: "$(params.arch)"
     retries: 3
-  - name: push-image
-    runAfter: ["build-image"]
-    taskRef:
-      name: push-image
-    workspaces:
-    - name: source
-      workspace: shared-data
-    params:
-    - name: milvus-env
-      value: "$(tasks.milvus-env.results.image)"
-    - name: image_name
-      value: "$(tasks.milvus-image-metadata.results.image)"
-    - name: dockerfile
-      value: "$(tasks.choose-dockerfile.results.dockerfile)"
-    retries: 3
-

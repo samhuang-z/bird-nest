@@ -80,7 +80,7 @@ ${ part_of_code_fetch(args) }
   - name: suppress_suffix_of_image_tag
     # if revision starts with 'v' (means tag), then image tag should be end with arch(amd64, arm64)
     # otherwise, arch suffix could be suppressed
-    value: ${args.revision.startsWith('v') ? false : (args.suppress_suffix_of_image_tag ?: 'false') }
+    value: ${suppress_suffix_of_image_tag(args)}
   - name: os_name
     value: ${getOSName(args.revision, args.os_name)}
   - name: milvus_env_version
@@ -174,4 +174,14 @@ def choose_pipeline (Map args ) {
     } else {
         'milvus-clone-build-push'
   }
+}
+
+def suppress_suffix_of_image_tag(Map args) {
+
+  if (args.revision && args.revision.startsWith('v')) {
+    return false
+  }
+
+
+  return args.suppress_suffix_of_image_tag ?: false
 }

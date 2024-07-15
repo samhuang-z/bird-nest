@@ -17,13 +17,12 @@ pipeline {
             steps {
                 container('kubectl') {
                     script {
-                        job_name = tekton.run revision: "$env.BRANCH_NAME",
-
-                                                              arch:'amd64',
-                                                              isPr: true,
-                                                              pullRequestBaseRef:"$env.CHANGE_TARGET",
-                                                              pullRequestNumber: "$env.CHANGE_ID",
-                                                              suppress_suffix_of_image_tag: true
+                        job_name = tekton.run revision: "$env.CHANGE_TARGET",
+                                              arch: 'amd64',
+                                              isPr: true,
+                                              pullRequestBaseRef:"$env.CHANGE_TARGET",
+                                              pullRequestNumber: "$env.CHANGE_ID",
+                                              suppress_suffix_of_image_tag: true
 
                     }
                 }
