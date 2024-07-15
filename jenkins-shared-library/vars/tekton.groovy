@@ -50,7 +50,7 @@ spec:
       podTemplate:
         securityContext:
           fsGroup: 65532 
-    - pipelineTaskName: push-image
+    - pipelineTaskName: image-build-push
       serviceAccountName: robot-tekton
     - pipelineTaskName: sync-env-image
       serviceAccountName: robot-tekton

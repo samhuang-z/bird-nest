@@ -18,8 +18,8 @@ pipeline {
                 container('kubectl') {
                     script {
                         job_name = tekton.run revision: "$env.BRANCH_NAME",
-                                                              arch:'amd64',
-                                                              suppress_suffix_of_image_tag: true
+                                                              arch:'amd64'
+                                                              // suppress_suffix_of_image_tag: true
                     }
                 }
 

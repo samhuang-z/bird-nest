@@ -21,6 +21,8 @@ spec:
   results:
     - name: dockerfile
       description: the path of dockerfile to use
+    - name: dockerfile_location
+      description: the path of dockerfile to use
   steps:
   - name: "generate-tag"
     image: $(params.runtime_image)
@@ -30,9 +32,11 @@ spec:
       if [ "$(params.computing_engine)" = "gpu" ]; then
 
         echo -n "./build/docker/milvus/gpu/$(params.os_name)/Dockerfile" | tee $(results.dockerfile.path)
+        echo -n "./build/docker/milvus/gpu/$(params.os_name)" | tee $(results.dockerfile_location.path)
 
         exit 0;
       fi
 
       # otherwise the computing_engine is cpu, so use dockerfile for cpu type
       echo -n "./build/docker/milvus/$(params.os_name)/Dockerfile" | tee $(results.dockerfile.path)
+      echo -n "./build/docker/milvus/$(params.os_name)" | tee $(results.dockerfile_location.path)
