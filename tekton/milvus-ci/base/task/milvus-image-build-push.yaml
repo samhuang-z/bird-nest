@@ -14,6 +14,9 @@ spec:
   - name: image_name
     type: string
     description: Reference of the image docker will produce.
+  - name: arch
+    type: string
+    default: "amd64"
   - name: DOCKERFILE
     description: The name of the Dockerfile
     default: "Dockerfile"
@@ -37,6 +40,7 @@ spec:
               "--progress=plain",
               "--frontend=dockerfile.v0",
               "--opt", "filename=$(params.DOCKERFILE)",
+              "--opt", "platform=linux/$(params.arch)",
               "--local", "context=.", "--local", "dockerfile=$(params.dockerfile_location)",
               "--output", "type=image,name=$(params.image_name),push=true",
               "--export-cache", "type=inline",

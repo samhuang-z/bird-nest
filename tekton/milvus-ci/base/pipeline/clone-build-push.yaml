@@ -193,4 +193,6 @@ spec:
       value: "$(tasks.milvus-image-metadata.results.image)"
     - name: dockerfile_location
       value: "$(tasks.choose-dockerfile.results.dockerfile_location)"
+    - name: arch
+      value: "$(params.arch)"
     retries: 3
