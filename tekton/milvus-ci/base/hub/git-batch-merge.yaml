@@ -127,7 +127,7 @@ spec:
         mode="$(params.mode)"
         if [[ $mode == "merge" ]]; then
           for ref in $p; do
-             git -C $CHECKOUT_DIR merge --quiet --allow-unrelated-histories refs/batch/$ref
+             git -C $CHECKOUT_DIR merge --verbose --allow-unrelated-histories refs/batch/$ref
           done
         elif [[ $mode == "cherry-pick" ]]; then
           for ref in $p; do
