@@ -18,6 +18,9 @@ spec:
     type: string
     description: the branch name or tag name of the repo
     default: "master"
+  - name: refspec
+    type: string
+    default: ""
   - name: registryToPush
     type: string
     description: the image registry to push
@@ -87,6 +90,8 @@ spec:
       value: $(params.repo_url)
     - name: revision
       value: $(params.revision)
+    - name: refspec
+      value: $(params.refspec)
     retries: 3
   - name: milvus-image-metadata
     taskRef:

@@ -160,9 +160,12 @@ def part_of_code_fetch(Map args) {
     value: ${args.pullRequestNumber}
 """
   } else {
+
 """
   - name: revision
     value: ${args.revision}
+  - name: refspec
+    value: ${args.revision.startsWith('v') ? "refs/tags/${args.revision}:refs/tags/${args.revision}" : "refs/heads/${args.revision}:refs/heads/${args.revision}" }
 """
   }
 }
