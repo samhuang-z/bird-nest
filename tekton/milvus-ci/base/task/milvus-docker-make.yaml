@@ -44,6 +44,10 @@ spec:
   - name: go-cache-name
     type: string
     default: "go1-21-cache"
+  - name: computing_engine
+    type: string
+    default: "cpu"
+    description: to build cpu image or gpu image
   workspaces:
   - name: source
   results:
@@ -73,8 +77,14 @@ spec:
       if [ $(params.build_type) = "debug" ]; then
          params="${params} mode=Debug"
       fi
+
+      install="install"
+      # if it is building gpu image
+      if [ "$(params.computing_engine)" = "gpu" ]; then
+        install="gpu-install"
+      fi
       
-      cmd="make clean && make install ${params}"
+      cmd="make clean && make ${install} ${params}"
 
       echo "[make cmd] ${cmd}"
 

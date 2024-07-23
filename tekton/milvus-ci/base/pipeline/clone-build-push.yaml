@@ -186,6 +186,8 @@ spec:
       value: $(params.build_type)
     - name: additional-make-params 
       value: $(params.additional-make-params)
+    - name: computing_engine
+      value: $(params.computing_engine)
   - name: image-build-push
     runAfter: ["make-milvus"]
     taskRef:
