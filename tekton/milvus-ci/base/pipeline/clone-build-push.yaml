@@ -170,6 +170,7 @@ spec:
     runAfter: ["fetch-source","sync-env-image", "choose-dockerfile", "release-conan-lock"]
     taskRef:
       name: make
+    timeout: "2h"
     workspaces:
     - name: source
       workspace: shared-data
