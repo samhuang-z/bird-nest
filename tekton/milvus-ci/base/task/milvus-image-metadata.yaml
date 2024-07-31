@@ -26,6 +26,9 @@ spec:
     type: string
     description: the architectures of the image, it would be amd64 or arm64
     default: "amd64"
+  - name: prefix
+    type: string
+    default: ""
   - name: computing_engine
     type: string
     default: "cpu"
@@ -88,7 +91,7 @@ spec:
       #!/usr/bin/env sh
       current=$(date +%Y%m%d)
       hash=$(echo $(params.hash) | cut -c1-8 )
-      tag="$(params.branch)-${current}-${hash}"
+      tag="$(params.prefix)$(params.branch)-${current}-${hash}"
 
       arch=$(params.arch)
 
