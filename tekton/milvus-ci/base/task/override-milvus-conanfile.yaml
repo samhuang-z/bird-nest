@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: override-milvus-conanfile
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  params:
+  - name: runtime_image
+    type: string
+    default: alpine:latest
+    description: the image of this task
+  workspaces:
+  - name: milvus-source
+  - name: conanfiles-source
+  steps:
+  - name: "override"
+    image: $(params.runtime_image)
+    workingDir: $(workspaces.conanfiles-source.path)
+    script: |
+      #!/usr/bin/env sh
+
+      cp -f conanfile.py $(workspaces.milvus-source.path)/internal/core/conanfile.py
+
+      echo ">>> cat conanfile after overiding >>>"
+      cat $(workspaces.milvus-source.path)/internal/core/conanfile.py

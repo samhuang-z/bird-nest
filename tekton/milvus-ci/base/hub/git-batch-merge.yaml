@@ -108,9 +108,13 @@ spec:
 
         p="$(params.batchedRefs)"
         refs="$(params.refspec)"
-        for ref in $p; do
-          refs="$refs $ref:refs/batch/$ref"
-        done
+
+        mode="$(params.mode)"
+        if [[ "${mode}" != "fetch" ]]; then
+          for ref in $p; do
+            refs="$refs $ref:refs/batch/$ref"
+          done
+        fi
 
         /ko-app/git-init \
           -url "$(params.url)" \
@@ -124,17 +128,20 @@ spec:
         git -C $CHECKOUT_DIR config user.name "$(params.gitUserName)"
         git -C $CHECKOUT_DIR config user.email "$(params.gitUserEmail)"
 
-        mode="$(params.mode)"
-        if [[ $mode == "merge" ]]; then
+        if [[ "${mode}" == "merge" ]]; then
           for ref in $p; do
+             echo "merge code from ${ref}"
              git -C $CHECKOUT_DIR merge --verbose --allow-unrelated-histories refs/batch/$ref
           done
-        elif [[ $mode == "cherry-pick" ]]; then
+        elif [[ "${mode}" == "cherry-pick" ]]; then
           for ref in $p; do
+             echo "cherry-pick code from ${ref}"
              git -C $CHECKOUT_DIR cherry-pick --allow-empty --keep-redundant-commits refs/batch/$ref
           done
+        elif [[ "${mode}" == "fetch" ]]; then
+            echo "fetch source code only from $(params.revision)"
         else
-            echo "unsupported mode $mode"
+            echo "unsupported mode ${mode}"
             exit 1
         fi
 

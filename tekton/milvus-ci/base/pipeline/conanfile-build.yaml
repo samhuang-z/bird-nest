@@ -1,26 +1,43 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: milvus-clone-build-push
+  name: conanfile-build
 spec:
   description: |
-    This pipeline clones a milvus git repo, builds a Docker image with docker in docker and
-    pushes it to a registry    
+    This pipeline for continues intergration of conanfile repo, then push the artifact to jfrog when ci success
   params:
-  - name: repo_url
-    type: string
-    description: the github url of the repo
-    default: https://github.com/milvus-io/milvus.git
-  - name: milvus_repo_owner
-    type: string
-    default: "milvus-io"
-  - name: revision
-    type: string
-    description: the branch name or tag name of the repo
-    default: "master"
-  - name: refspec
-    type: string
-    default: ""
+  - name: conanfiles_repo
+    type: object
+    properties:
+      repo_url:
+        type: string
+      gitMode:
+        type: string
+      gitBaseRef: 
+        type: string
+      pullRequestNumber:
+        type: string
+    default:
+      repo_url: https://github.com/milvus-io/conanfiles.git
+      gitBaseRef: master
+      gitMode: merge
+      pullRequestNumber: ''
+  - name: milvus_repo
+    type: object
+    properties:
+      url:
+        type: string
+      gitMode:
+        type: string
+      gitBaseRef: 
+        type: string
+      repo_owner:
+        type: string
+    default:
+      url: https://github.com/milvus-io/milvus.git
+      gitBaseRef: master
+      gitMode: fetch
+      repo_owner: "milvus-io"
   - name: registryToPush
     type: string
     description: the image registry to push
@@ -57,6 +74,12 @@ spec:
     type: string
     description: the params for make commands
     default: "use_disk_index=ON"
+  - name: conan-user-secret 
+    type: string
+    default: "conan-user-secret"
+  - name: artifactory_url
+    type: string
+    default: https://milvus01.jfrog.io/artifactory/api/conan/default-conan-local
   workspaces:
   - name: shared-data
   results:
@@ -68,30 +91,58 @@ spec:
     type: string
     description: the tag of the image to build
     value: "$(tasks.milvus-image-metadata.results.tag)"
-  finally:
-  - name: finally-release-conan-lock
-    workspaces:
-    - name: source
-      workspace: shared-data
-    taskRef:
-      name: release-lock
-    params:
-    - name: conan-cache-name
-      value: "$(tasks.choose-cache.results.conan-cache-name)"
   tasks:
-  - name: fetch-source
+  - name: fetch-conanfiles-source
     taskRef:
-      name: git-clone
+      resolver: bundles
+      params:
+        - name: bundle
+          value: harbor.milvus.io/milvusdb/tekton/git-batch-merge:0.2
+        - name: name
+          value: git-batch-merge
+        - name: kind
+          value: task
     workspaces:
     - name: output
       workspace: shared-data
+      subPath: conanfiles
     params:
     - name: url
-      value: $(params.repo_url)
+      value: $(params.conanfiles_repo.repo_url)
+    - name: mode
+      value: $(params.conanfiles_repo.gitMode)
     - name: revision
-      value: $(params.revision)
+      value: $(params.conanfiles_repo.gitBaseRef)
     - name: refspec
-      value: $(params.refspec)
+      value: refs/heads/$(params.conanfiles_repo.gitBaseRef):refs/heads/$(params.conanfiles_repo.gitBaseRef)
+    - name: batchedRefs
+      value: "refs/pull/$(params.conanfiles_repo.pullRequestNumber)/head"
+    retries: 3
+  - name: fetch-milvus-source
+    taskRef:
+      resolver: bundles
+      params:
+        - name: bundle
+          value: harbor.milvus.io/milvusdb/tekton/git-batch-merge:0.2
+        - name: name
+          value: git-batch-merge
+        - name: kind
+          value: task
+    workspaces:
+    - name: output
+      workspace: shared-data
+      subPath: milvus
+    params:
+    - name: url
+      value: $(params.milvus_repo.url)
+    - name: mode
+      value: fetch
+    - name: revision
+      value: $(params.milvus_repo.gitBaseRef)
+    - name: refspec
+      value: refs/heads/$(params.milvus_repo.gitBaseRef):refs/heads/$(params.milvus_repo.gitBaseRef)
+    - name: batchedRefs
+      value: '' 
     retries: 3
   - name: milvus-image-metadata
     taskRef:
@@ -105,13 +156,13 @@ spec:
           value: task
     params:
     - name: milvus_repo_owner
-      value: $(params.milvus_repo_owner)
+      value: $(params.milvus_repo.repo_owner)
     - name: registryToPush
       value: $(params.registryToPush)
     - name: branch
-      value: $(params.revision)
+      value: $(params.milvus_repo.gitBaseRef)
     - name: hash
-      value: $(tasks.fetch-source.results.commit)
+      value: $(tasks.fetch-milvus-source.results.commit)
     - name: arch
       value: $(params.arch)
     - name: computing_engine
@@ -120,8 +171,10 @@ spec:
       value: $(params.build_type)
     - name: suppress_suffix_of_image_tag
       value: $(params.suppress_suffix_of_image_tag)
+    - name: prefix
+      value: conanfile-
   - name: milvus-env
-    runAfter: ["fetch-source"]
+    runAfter: ["fetch-milvus-source"]
     taskRef:
       resolver: bundles
       params:
@@ -134,6 +187,7 @@ spec:
     workspaces:
     - name: source
       workspace: shared-data
+      subPath: milvus
     params:
     - name: os_name
       value: $(params.os_name)
@@ -175,89 +229,84 @@ spec:
       value: $(tasks.milvus-env.results.os_name)
     - name: computing_engine
       value: $(params.computing_engine)
-  - name: choose-cache
+  - name: conan-export
+    runAfter: ["fetch-conanfiles-source"]
     taskRef:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/choose-cache:0.1
+          value: harbor.milvus.io/milvusdb/tekton/conanfiles-export:0.1
         - name: name
-          value: choose-cache
+          value: conanfiles-export
         - name: kind
           value: task
-
-    params:
-    - name: os_name
-      value: $(tasks.milvus-env.results.os_name)
-    - name: gcc
-      value: $(params.gcc)
-    - name: build_type 
-      value: $(params.build_type)
-  - name: release-conan-lock
     workspaces:
     - name: source
       workspace: shared-data
+      subPath: conanfiles
+    - name: conan-cache
+      workspace: shared-data
+      subPath: cache
+  - name: override-milvus-conanfile
+    runAfter: ["fetch-milvus-source","fetch-conanfiles-source"]
     taskRef:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/release-lock:0.1
+          value: harbor.milvus.io/milvusdb/tekton/override-milvus-conanfile:0.1
         - name: name
-          value: release-lock
+          value: override-milvus-conanfile
         - name: kind
           value: task
-    params:
-    - name: conan-cache-name
-      value: "$(tasks.choose-cache.results.conan-cache-name)"
-  - name: make-milvus
-    runAfter: ["fetch-source","sync-env-image", "choose-dockerfile", "release-conan-lock"]
+    workspaces:
+    - name: conanfiles-source
+      workspace: shared-data
+      subPath: conanfiles
+    - name: milvus-source
+      workspace: shared-data
+      subPath: milvus
+  - name: milvus-build
+    runAfter: ["sync-env-image","conan-export","override-milvus-conanfile"]
     taskRef:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/make-milvus:0.1
+          value: harbor.milvus.io/milvusdb/tekton/milvus-make-with-conan-workspace:0.1
         - name: name
-          value: make
+          value: milvus-make-with-conan-workspace
         - name: kind
           value: task
     timeout: "2h"
     workspaces:
     - name: source
       workspace: shared-data
+      subPath: milvus
+    - name: conan-cache
+      workspace: shared-data
+      subPath: cache
     params:
     - name: milvus-env
       value: "$(tasks.milvus-env.results.image)"
-    - name: image_name
-      value: "$(tasks.milvus-image-metadata.results.image)"
-    - name: dockerfile
-      value: "$(tasks.choose-dockerfile.results.dockerfile)"
-    - name: conan-cache-name
-      value: "$(tasks.choose-cache.results.conan-cache-name)"
-    - name: build_type
-      value: $(params.build_type)
-    - name: additional-make-params 
-      value: $(params.additional-make-params)
-    - name: computing_engine
-      value: $(params.computing_engine)
-  - name: image-build-push
-    runAfter: ["make-milvus"]
+  - name: conan-upload
+    runAfter: ["milvus-build"]
     taskRef:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/image-build-push:0.1
+          value: harbor.milvus.io/milvusdb/tekton/conan-upload:0.1
         - name: name
-          value: image-build-push
+          value: conan-upload
         - name: kind
           value: task
+    when: 
+     # upload conan package to artifact if current build is not pull request
+     - input: $(params.conanfiles_repo.gitMode)
+       operator: notin
+       values: ["merge"]
     workspaces:
-    - name: source
+    - name: conan-cache
       workspace: shared-data
+      subPath: cache
     params:
-    - name: image_name
-      value: "$(tasks.milvus-image-metadata.results.image)"
-    - name: dockerfile_location
-      value: "$(tasks.choose-dockerfile.results.dockerfile_location)"
-    - name: arch
-      value: "$(params.arch)"
-    retries: 3
+    - name: artifactory_url
+      value: $(params.artifactory_url)

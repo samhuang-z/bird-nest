@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: conan-upload
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will upload local conan package
+  params:
+  - name: artifactory_url
+    type: string
+    default: https://jfrog.milvus.io/artifactory/api/conan/conan-local
+  - name: secret
+    type: string
+    default: conan-user-secret
+  - name: runtime_image
+    type: string
+    default: harbor.milvus.io/milvusdb/conan:1.62.0
+    description: the image of this task
+  workspaces:
+  - name: conan-cache
+    mountPath: /root/.conan
+  steps:
+  - name: "upload"
+    image: $(params.runtime_image)
+    env:
+      - name: CONAN_LOGIN_USERNAME
+        valueFrom: 
+          secretKeyRef:
+            name: $(params.secret)
+            key: user
+      - name: CONAN_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: $(params.secret)
+            key: password
+    script: |
+      #!/usr/bin/env sh
+
+      #  activate conan revisions
+      export CONAN_REVISIONS_ENABLED=1
+
+      # add remote conan artifactory on given url
+      conan remote add artifactory $(params.artifactory_url) -f
+
+      # user login based on env CONAN_LOGIN_USERNAME and CONAN_PASSWORD
+      conan user --clean
+      conan user -r artifactory
+
+      # upload all the recipe and binary from local conan cache
+      conan upload "*" -r artifactory -c --all

@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: conanfiles-export
+  labels:
+    app.kubernetes.io/version: "0.1"
+spec:
+  description: >-
+    This task will release conan lock
+  params:
+  - name: runtime_image
+    type: string
+    default: harbor.milvus.io/milvusdb/conan:1.62.0
+    description: the image of this task
+  workspaces:
+  - name: source
+  - name: conan-cache
+    mountPath: /root/.conan
+  steps:
+  - name: "export"
+    image: $(params.runtime_image)
+    workingDir: $(workspaces.source.path)
+    script: |
+      #!/usr/bin/env sh
+      python3 build.py

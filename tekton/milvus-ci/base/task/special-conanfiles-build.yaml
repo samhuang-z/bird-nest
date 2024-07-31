@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: special-conanfiles-build
+spec:
+  params:
+  - name: milvus-env
+    type: string
+    description: the image name of milvusdb/milvus-env to use
+  workspaces:
+  - name: conan-cache
+    mountPath: /root/.conan
+  steps:
+  - name: install
+    image: $(params.milvus-env)
+    script: |
+      #!/usr/bin/env sh
+
+      conan remote add conancenter https://center.conan.io -f
+      conan remote add default-conan-local https://milvus01.jfrog.io/artifactory/api/conan/default-conan-local  -f
+
+      conan install folly/2023.10.30.08@milvus/dev  --build=missing
+      conan install rocksdb/6.29.5@milvus/dev --build=missing
+      conan install google-cloud-cpp/2.5.0@milvus/dev --build=missing
+      conan install opentelemetry-cpp/1.8.1.1@milvus/dev --build=missing

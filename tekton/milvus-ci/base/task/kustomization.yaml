@@ -11,3 +11,8 @@ resources:
 - milvus-docker-sync-image.yaml
 - milvus-conan-lock-release.yaml
 - milvus-image-build-push.yaml
+- conanfiles-export.yaml
+- special-conanfiles-build.yaml
+- milvus-make-with-conan-workspace.yaml
+- conan-upload.yaml
+- override-milvus-conanfile.yaml

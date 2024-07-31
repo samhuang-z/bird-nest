@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: make
+  name: milvus-make-with-conan-workspace
   labels:
     app.kubernetes.io/version: "0.1"
   annotations:
@@ -11,23 +11,7 @@ metadata:
     tekton.dev/displayName: docker-build
     tekton.dev/platforms: "linux/amd64"
 spec:
-  description: >-
-    The task is using a dind sidecar over TCP+TLS.
-    This task will build and push an image using docker.
-    The task will compile first in the milvusdb/milvus-env container, then
-    build image based on the dockerfile.
-    This image will be pushed to an image registry.
   params:
-  - name: image_name
-    type: string
-    description: Reference of the image docker will produce.
-  - name: dockerfile
-    type: string
-    description: Path to the Dockerfile to build.
-    default: ./build/docker/milvus/ubuntu22.04/Dockerfile
-  - name: arch
-    type: string
-    default: amd64
   - name: milvus-env
     type: string
     description: the image name of milvusdb/milvus-env to use
@@ -39,9 +23,6 @@ spec:
     type: string
     description: debug mode or release mod
     default: "release"
-  - name: conan-cache-name
-    type: string
-    default: "cache-conan-ubuntu2204-gcc12-release"
   - name: go-cache-name
     type: string
     default: "go1-21-cache"
@@ -51,6 +32,8 @@ spec:
     description: to build cpu image or gpu image
   workspaces:
   - name: source
+  - name: conan-cache
+    mountPath: /root/.conan
   results:
   - name: IMAGE_DIGEST
     description: Digest of the image just built.
@@ -92,33 +75,11 @@ spec:
       sh -c "${cmd}"
 
     volumeMounts:
-      - mountPath: /root/.conan
-        name: $(params.conan-cache-name)
       - mountPath: /go/pkg/mod
         name: $(params.go-cache-name)
       - mountPath: /ccache
         name: ccache
   volumes:
-  - hostPath:
-      # conan cache for ubuntu20.04 os, gcc9 compiler and build type is release
-      path: /root/cache/conan/ubuntu20.04/gcc9/release/.conan
-      type: DirectoryOrCreate
-    name: cache-conan-ubuntu2004-gcc9-release
-  - hostPath:
-      # conan cache for ubuntu20.04 os, gcc9 compiler and build type is debug
-      path: /root/cache/conan/ubuntu20.04/gcc9/debug/.conan
-      type: DirectoryOrCreate
-    name: cache-conan-ubuntu2004-gcc9-debug
-  - hostPath:
-      # conan cache for ubuntu22.04 os, gcc12 compiler and build type is release
-      path: /root/cache/conan/ubuntu22.04/gcc12/release/.conan
-      type: DirectoryOrCreate
-    name: cache-conan-ubuntu2204-gcc12-release
-  - hostPath:
-      # conan cache for ubuntu22.04 os, gcc12 compiler and build type is debug 
-      path: /root/cache/conan/ubuntu22.04/gcc12/debug/.conan
-      type: DirectoryOrCreate
-    name: cache-conan-ubuntu2204-gcc12-debug
   - hostPath:
       # conan cache for ubuntu20.04 os, gcc9 compiler and build type is release
       path: /root/cache/go/go1.21/mod
