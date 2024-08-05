@@ -211,6 +211,14 @@ def print_log(name) {
   """
 }
 
+def cancel(name) {
+     
+    sh """
+    echo try to cancel: ${name}
+    tkn pipelinerun cancel ${name} -f -n milvus-ci
+  """
+}
+
 // return image if there is no failures
 // throw exception if there is a failure
 def check_result(name) {
