@@ -18,6 +18,10 @@ spec:
     type: string
     default: harbor.milvus.io/milvusdb/conan:1.62.0
     description: the image of this task
+  - name: conan_version
+    type: string
+    default: 1.64.1
+    description: the image of this task
   workspaces:
   - name: conan-cache
     mountPath: /root/.conan
@@ -37,6 +41,8 @@ spec:
             key: password
     script: |
       #!/usr/bin/env sh
+
+      pip install conan==$(params.conan_version) --force
 
       #  activate conan revisions
       export CONAN_REVISIONS_ENABLED=1
