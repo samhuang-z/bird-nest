@@ -215,7 +215,7 @@ def cancel(name) {
      
     sh """
     echo try to cancel: ${name}
-    tkn pipelinerun cancel ${name} -f -n milvus-ci
+    tkn pipelinerun cancel ${name} -n milvus-ci
   """
 }
 

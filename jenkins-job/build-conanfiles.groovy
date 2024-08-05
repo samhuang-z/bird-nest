@@ -27,7 +27,6 @@ pipeline {
                                               gitMode: gitMode ,
                                               gitBaseRef: gitBaseRef,
                                               pullRequestNumber: "$env.CHANGE_ID"
-
                     }
                 }
 
@@ -40,6 +39,19 @@ pipeline {
                         }
 
                         tekton.check_result(job_name)
+                    }
+                }
+            }
+            post {
+                // always sure to stop the tekton job
+                always {
+                    container('tkn') {
+                        script {
+                          try {
+                              tekton.cancel(job_name)
+                          } catch (Exception e) {
+                          }
+                        }
                     }
                 }
             }
