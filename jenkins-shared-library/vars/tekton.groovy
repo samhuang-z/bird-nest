@@ -226,6 +226,11 @@ def check_result(name) {
         throw new Exception(failures[0].message)
     }
 
+    def successes = read.status.conditions.findAll { it.type == 'Succeeded' && it.status == 'True' }
+    if (successes.size() == 0) {
+        throw new Exception("No success condition found")
+    }
+
     // get first element if any result found
     def query = { list, closure  ->
         def items = list.findAll(closure)
