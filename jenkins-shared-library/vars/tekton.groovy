@@ -36,7 +36,7 @@ spec:
     resolver: bundles
     params:
     - name: bundle
-      value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.1
+      value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.5
     - name: name
       value: conanfile-build
     - name: kind
@@ -155,6 +155,8 @@ spec:
       serviceAccountName: robot-tekton
     - pipelineTaskName: sync-env-image
       serviceAccountName: robot-tekton
+    - pipelineTaskName: make-milvus
+      serviceAccountName: build-bot
 ${ args.arch == 'arm64' ? part_of_arm_template : '' }
   workspaces:
   - name: shared-data
