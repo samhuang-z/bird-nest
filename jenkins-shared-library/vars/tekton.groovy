@@ -14,6 +14,7 @@ spec:
     value:
       url: ${args.milvus_repo_url ?: 'https://github.com/milvus-io/milvus.git'}
       repo_owner: ${args.milvus_repo_owner ?: 'milvus-io'}
+      gitBaseRef: "${args.gitBaseRef}"
   - name: arch
     value: ${args.arch}
   - name: computing_engine
