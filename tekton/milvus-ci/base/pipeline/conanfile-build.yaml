@@ -100,7 +100,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: git-batch-merge
         - name: kind
@@ -126,7 +126,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: git-clone
         - name: kind
@@ -152,7 +152,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: image-metadata
         - name: kind
@@ -182,7 +182,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: milvus-env
         - name: kind
@@ -206,7 +206,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: sync-env-image
         - name: kind
@@ -222,7 +222,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: choose-dockerfile
         - name: kind
@@ -238,7 +238,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: conanfiles-export
         - name: kind
@@ -256,7 +256,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: override-milvus-conanfile
         - name: kind
@@ -296,7 +296,7 @@ spec:
       resolver: bundles
       params:
         - name: bundle
-          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+          value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
         - name: name
           value: conan-upload
         - name: kind

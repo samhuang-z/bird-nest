@@ -38,7 +38,7 @@ spec:
     resolver: bundles
     params:
     - name: bundle
-      value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.1
+      value: harbor.milvus.io/milvusdb/tekton/build-milvus:0.6.2
     - name: name
       value: conanfile-build
     - name: kind

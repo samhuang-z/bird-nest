@@ -55,3 +55,14 @@ spec:
 
       # upload all the recipe and binary from local conan cache
       conan upload "*" -r artifactory -c --all
+  - name: "print-packages-revision"
+    image: $(params.runtime_image)
+    script: |
+      #!/usr/bin/env sh
+
+      pip install conan==$(params.conan_version)
+
+      #  activate conan revisions
+      export CONAN_REVISIONS_ENABLED=1
+
+      conan search '*' --revisions
