@@ -21,7 +21,6 @@ spec:
   - name: conan_version
     type: string
     default: 1.64.1
-    description: the image of this task
   workspaces:
   - name: conan-cache
     mountPath: /root/.conan
@@ -42,7 +41,7 @@ spec:
     script: |
       #!/usr/bin/env sh
 
-      pip install conan==$(params.conan_version) --force
+      pip install conan==$(params.conan_version)
 
       #  activate conan revisions
       export CONAN_REVISIONS_ENABLED=1

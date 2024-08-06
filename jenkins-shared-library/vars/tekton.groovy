@@ -32,6 +32,8 @@ spec:
     value: ${args.additional_make_params ?: 'use_disk_index=ON'}
   - name: gitMode
     value: ${args.gitMode}
+  - name: conan_version
+    value: ${args.conan_version}
   pipelineRef:
     resolver: bundles
     params:
